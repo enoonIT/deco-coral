@@ -66,23 +66,24 @@ def get_office31_dataloader(case, batch_size):
         'amazon': [0.79235075407833078, 0.78620633471295642, 0.78417965306916637],
         'webcam': [0.61197983011509638, 0.61876474000372972, 0.61729662103473015],
         'dslr': [],
-        'imagenet': [0.485, 0.456, 0.406]
+        'imagenet': [0.485, 0.456, 0.406],
+        'special': [122.7, 116.7, 104.0]
     }
     stds = {
         'amazon': [0.27691643643313618, 0.28152348841965347, 0.28287296762830788],
         'webcam': [0.22763857108616978, 0.23339382150450594, 0.23722725519031848],
         'dslr': [],
-        'imagenet': [0.229, 0.224, 0.225]
+        'imagenet': [0.229, 0.224, 0.225],
+        'special': [1.0, 1.0, 1.0]
     }
 
     img_size = (227, 227)
-    #TODO add data aug (crop, mirror)
     transform = [
         transforms.Resize((256,256)),
         transforms.RandomCrop(img_size),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(means['imagenet'], stds['imagenet']),
+        transforms.Normalize(means['special'], stds['special']),
     ]
 
     data_loader = data.DataLoader(
