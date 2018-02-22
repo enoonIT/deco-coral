@@ -37,7 +37,7 @@ def get_train_test_loader(directory, batch_size, testing_size=0.1, img_size=None
 
     train_loader = data.DataLoader(
         dataset,
-        num_workers=2,
+        num_workers=4,
         batch_size=batch_size,
         sampler=train_sampler,
         drop_last=True
@@ -45,7 +45,7 @@ def get_train_test_loader(directory, batch_size, testing_size=0.1, img_size=None
 
     test_loader = data.DataLoader(
         dataset,
-        num_workers=2,
+        num_workers=4,
         batch_size=batch_size,
         sampler=test_sampler,
         drop_last=True
@@ -76,9 +76,9 @@ def get_office31_dataloader(case, batch_size):
     }
 
     img_size = (227, 227)
-
+    #TODO add data aug (crop, mirror)
     transform = [
-        transforms.Scale(img_size),
+        transforms.Resize(img_size),
         transforms.ToTensor(),
         transforms.Normalize(means['imagenet'], stds['imagenet']),
     ]
