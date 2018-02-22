@@ -162,8 +162,10 @@ if __name__ == '__main__':
     training_statistic = []
     testing_s_statistic = []
     testing_t_statistic = []
-
+    print(scheduler.get_lr())
     for e in range(0, EPOCHS):
+        scheduler.step()
+        print(scheduler.get_lr())
         if lambda_val:
             _lambda = lambda_val
         else:
@@ -202,7 +204,7 @@ if __name__ == '__main__':
         logger.scalar_summary("loss/source", sum(row['classification_loss'] / row['total_steps'] for row in res), e + 1)
         logger.scalar_summary("acc/target", test_target['accuracy'], e + 1)
         logger.scalar_summary("acc/source", test_source['accuracy'], e + 1)
-        logger.scalar_summary("lr", LEARNING_RATE, e + 1)
+        logger.scalar_summary("lr", scheduler.get_lr()[0], e + 1)
         logger.scalar_summary("lambda", _lambda, e + 1)
 
     utils.save(training_statistic, 'training_statistic.pkl')
