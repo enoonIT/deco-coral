@@ -2,11 +2,13 @@ from __future__ import division
 import argparse
 
 import time
+
+import itertools
 import torch
 from torch.utils import model_zoo
 from torch.autograd import Variable
 
-import models
+import old_models
 import utils
 from data_loader import get_train_test_loader, get_office31_dataloader
 from logger import Logger
@@ -15,7 +17,7 @@ CUDA = True if torch.cuda.is_available() else False
 LEARNING_RATE = 1e-5#1e-4
 WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
-BATCH_SIZE = [200, 56]
+BATCH_SIZE = [128, 128]
 EPOCHS = 120
 
 source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
@@ -28,12 +30,12 @@ def train(model, optimizer, epoch, _lambda):
     result = []
 
     # Expected size : xs -> (batch_size, 3, 300, 300), ys -> (batch_size)
-    source, target = list(enumerate(source_loader)), list(enumerate(target_loader))
-    train_steps = min(len(source), len(target))
+    # source, target = list(enumerate(source_loader)), list(enumerate(target_loader))
+    train_steps = len(source_loader)
 
-    for batch_idx in range(train_steps):
-        _, (source_data, source_label) = source[batch_idx]
-        _, (target_data, _) = target[batch_idx]
+    for batch_idx, (source_batch, target_batch) in enumerate(zip(source_loader, itertools.cycle(target_loader))):
+        _, (source_data, source_label) = source_batch
+        _, (target_data, _) = target_batch
         if CUDA:
             source_data = source_data.cuda()
             source_label = source_label.cuda()
@@ -46,7 +48,7 @@ def train(model, optimizer, epoch, _lambda):
         out1, out2 = model(source_data, target_data)
 
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
-        coral_loss = models.CORAL(out1, out2)
+        coral_loss = old_models.CORAL(out1, out2)
 
         sum_loss = _lambda * coral_loss + classification_loss
         sum_loss.backward()
@@ -126,15 +128,16 @@ def load_pretrained(model):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--load', help='Resume from checkpoint file')
+    parser.add_argument('--log_subdir', default="")
     args = parser.parse_args()
 
-    model = models.DeepCORAL(31)
+    model = old_models.DeepCORAL(31)
     lambda_val = 0.8
     if lambda_val:
         extra = "lambda_%g" % lambda_val
     else:
         extra = "growing_lambda"
-    logger = Logger("logs/bs%d_lr%g_e%d_%s_%d" % (BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100))
+    logger = Logger("logs/%sbs%d_lr%g_e%d_%s_%d" % (args.log_subdir, BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100))
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
     optimizer = torch.optim.SGD([

@@ -4,7 +4,7 @@ import torch
 from torch.utils import model_zoo
 from torch.autograd import Variable
 
-import models
+import old_models
 import utils
 from data_loader import get_train_test_loader, get_office31_dataloader
 
@@ -45,7 +45,7 @@ def train(model, optimizer, epoch, _lambda):
         out1, out2 = model(source_data, target_data)
 
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
-        coral_loss = models.CORAL(out1, out2)
+        coral_loss = old_models.CORAL(out1, out2)
 
         sum_loss = _lambda*coral_loss + classification_loss
         sum_loss.backward()
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', help='Resume from checkpoint file')
     args = parser.parse_args()
 
-    model = models.DeepCORAL(31)
+    model = old_models.DeepCORAL(31)
 
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
