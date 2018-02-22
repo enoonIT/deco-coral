@@ -78,7 +78,9 @@ def get_office31_dataloader(case, batch_size):
     img_size = (227, 227)
     #TODO add data aug (crop, mirror)
     transform = [
-        transforms.Resize(img_size),
+        transforms.Resize((256,256)),
+        transforms.RandomCrop(img_size),
+        transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(means['imagenet'], stds['imagenet']),
     ]

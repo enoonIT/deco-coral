@@ -132,15 +132,17 @@ if __name__ == '__main__':
     parser.add_argument('--load', help='Resume from checkpoint file')
     parser.add_argument('--log_subdir', default="")
     parser.add_argument('--lr',type=float, default=0.001)
+    parser.add_argument('--extra', help="appended to log name")
     args = parser.parse_args()
 
     LEARNING_RATE = args.lr
     model = old_models.DeepCORAL(31)
     lambda_val = 0.8
+    extra = args.extra
     if lambda_val:
-        extra = "lambda_%g" % lambda_val
+        extra += "lambda_%g" % lambda_val
     else:
-        extra = "growing_lambda"
+        extra += "growing_lambda"
     logger = Logger("logs/%sbs%d_lr%g_e%d_%s_%d" % (args.log_subdir, BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100))
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
