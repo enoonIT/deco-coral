@@ -15,7 +15,6 @@ from data_loader import get_train_test_loader, get_office31_dataloader
 from logger import Logger
 
 CUDA = True if torch.cuda.is_available() else False
-LEARNING_RATE = 1e-5#1e-4
 WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
 BATCH_SIZE = [128, 128]
@@ -132,8 +131,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--load', help='Resume from checkpoint file')
     parser.add_argument('--log_subdir', default="")
+    parser.add_argument('--lr',type=float, default=0.001)
     args = parser.parse_args()
 
+    LEARNING_RATE = args.lr
     model = old_models.DeepCORAL(31)
     lambda_val = 0.8
     if lambda_val:
