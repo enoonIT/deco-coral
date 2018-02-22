@@ -34,8 +34,8 @@ def train(model, optimizer, epoch, _lambda):
     train_steps = len(source_loader)
 
     for batch_idx, (source_batch, target_batch) in enumerate(zip(source_loader, itertools.cycle(target_loader))):
-        _, (source_data, source_label) = source_batch
-        _, (target_data, _) = target_batch
+        source_data, source_label = source_batch
+        target_data, _ = target_batch
         if CUDA:
             source_data = source_data.cuda()
             source_label = source_label.cuda()
