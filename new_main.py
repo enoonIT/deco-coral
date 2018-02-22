@@ -5,6 +5,7 @@ import time
 
 import itertools
 import torch
+from torch.optim.lr_scheduler import StepLR
 from torch.utils import model_zoo
 from torch.autograd import Variable
 
@@ -18,7 +19,9 @@ LEARNING_RATE = 1e-5#1e-4
 WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
 BATCH_SIZE = [128, 128]
-EPOCHS = 120
+EPOCHS = 90
+STEP_DOWN = 22
+GAMMA = 0.1
 
 source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
 target_loader = get_office31_dataloader(case='webcam', batch_size=BATCH_SIZE[1])
@@ -145,6 +148,7 @@ if __name__ == '__main__':
         {'params': model.source_fc.parameters(), 'lr': 10 * LEARNING_RATE},
         {'params': model.target_fc.parameters(), 'lr': 10 * LEARNING_RATE}
     ], lr=LEARNING_RATE, momentum=MOMENTUM)
+    scheduler = StepLR(optimizer, step_size=STEP_DOWN, gamma=GAMMA)
 
     if CUDA:
         model = model.cuda()
