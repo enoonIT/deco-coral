@@ -64,16 +64,17 @@ def train(model, optimizer, epoch, _lambda):
             'total_loss': sum_loss.data[0]
         })
 
-        print('Train Epoch: {:2d} [{:2d}/{:2d}]\t'
-              'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}'.format(
-            epoch,
-            batch_idx + 1,
-            train_steps,
-            _lambda,
-            classification_loss.data[0],
-            coral_loss.data[0],
-            sum_loss.data[0]
-        ))
+        if batch_idx % 3 == 0:
+            print('Train Epoch: {:2d} [{:2d}/{:2d}]\t'
+                  'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}'.format(
+                epoch,
+                batch_idx + 1,
+                train_steps,
+                _lambda,
+                classification_loss.data[0],
+                coral_loss.data[0],
+                sum_loss.data[0]
+            ))
 
     return result
 
@@ -124,7 +125,6 @@ def load_pretrained(model):
     model.load_state_dict(model_dict)
 
 
-
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--load', help='Resume from checkpoint file')
@@ -136,6 +136,7 @@ def get_args():
     parser.add_argument('--lambda_val', default=0.6, type=float)
     args = parser.parse_args()
 
+
 if __name__ == '__main__':
     args = get_args()
 
@@ -145,7 +146,6 @@ if __name__ == '__main__':
     STEP_DOWN = int(EPOCHS / 0.4)
     GAMMA = 0.2
 
-
     model = models.DeepColorizationCORAL(31)
     lambda_val = args.lambda_val
     extra = args.extra
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     else:
         extra += "growing_lambda"
     logger = Logger("logs/%sbs%d_lr%g_e%d_%s_%d" % (
-    args.log_subdir, BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100))
+        args.log_subdir, BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100))
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
     optimizer = torch.optim.SGD([
