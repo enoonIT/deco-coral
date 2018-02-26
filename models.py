@@ -9,7 +9,7 @@ from itertools import chain
 
 
 def get_new_image(input, model):
-    return model.sharedNet[0](0)
+    return model.sharedNet[0](input)
 
 
 class DeepColorizationCORAL(nn.Module):
@@ -74,8 +74,8 @@ class Deco(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
-        x = self.conv1(x)
+    def forward(self, original):
+        x = self.conv1(original)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
@@ -84,7 +84,7 @@ class Deco(nn.Module):
         x = self.conv3D(x)
         #        x = self.layer2(x)
 
-        return nn.functional.upsample(x, scale_factor=4, mode='bilinear')
+        return original + nn.functional.upsample(x, scale_factor=4, mode='bilinear')
 
 
 class AlexNet(nn.Module):

@@ -19,6 +19,7 @@ CUDA = True if torch.cuda.is_available() else False
 WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
 
+
 def train(model, optimizer, epoch, _lambda):
     model.train()
 
@@ -152,8 +153,8 @@ if __name__ == '__main__':
         extra += "lambda_%g" % lambda_val
     else:
         extra += "growing_lambda"
-    logger = Logger("logs/%sbs%d_lr%g_e%d_%s_%d" % (
-        args.log_subdir, BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100))
+    name = "bs%d_lr%g_e%d_%s_%d" % (BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100)
+    logger = Logger("logs/%s%s" % (args.log_subdir, name))
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
     optimizer = torch.optim.SGD([
@@ -223,4 +224,4 @@ if __name__ == '__main__':
     utils.save(training_statistic, 'training_statistic.pkl')
     utils.save(testing_s_statistic, 'testing_s_statistic.pkl')
     utils.save(testing_t_statistic, 'testing_t_statistic.pkl')
-    utils.save_net(model, 'checkpoint.tar')
+    utils.save_net(model, 'models/checkpoint_%s.tar' % name)
