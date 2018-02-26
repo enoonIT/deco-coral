@@ -71,7 +71,7 @@ def train(model, optimizer, epoch, _lambda):
                 classification_loss.data[0],
                 coral_loss.data[0],
                 sum_loss.data[0],
-                deco_norm.data
+                deco_norm.data.numpy()
             ))
 
     return result
