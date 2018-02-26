@@ -4,7 +4,12 @@ from torchvision.models.resnet import BasicBlock, Bottleneck
 import torch.utils.model_zoo as model_zoo
 from itertools import chain
 
+
 # code adapted from https://github.com/SSARCandy/DeepCORAL
+
+
+def get_new_image(input, model):
+    return model.sharedNet[0](0)
 
 
 class DeepColorizationCORAL(nn.Module):
@@ -39,8 +44,8 @@ class Deco(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
-#        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.conv3D = nn.Conv2d(256,3,1)
+        #        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.conv3D = nn.Conv2d(256, 3, 1)
         # self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         # self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
@@ -77,7 +82,7 @@ class Deco(nn.Module):
 
         x = self.layer1(x)
         x = self.conv3D(x)
-#        x = self.layer2(x)
+        #        x = self.layer2(x)
 
         return nn.functional.upsample(x, scale_factor=4, mode='bilinear')
 
