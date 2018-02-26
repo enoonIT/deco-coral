@@ -13,9 +13,9 @@ def get_new_image(input, model):
 
 
 class DeepColorizationCORAL(nn.Module):
-    def __init__(self, num_classes=1000):
+    def __init__(self, num_classes=1000, deco_weight=0.001):
         super(DeepColorizationCORAL, self).__init__()
-        self.deco = Deco(Bottleneck, [8])
+        self.deco = Deco(Bottleneck, [8], deco_weight)
         self.sharedNet = AlexNet()
         self.source_fc = nn.Linear(4096, num_classes)
         self.target_fc = nn.Linear(4096, num_classes)
@@ -36,7 +36,7 @@ class DeepColorizationCORAL(nn.Module):
 
 
 class Deco(nn.Module):
-    def __init__(self, block, layers):
+    def __init__(self, block, layers, deco_weight):
         self.inplanes = 64
         super(Deco, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
@@ -57,7 +57,7 @@ class Deco(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-        self.deco_weight = 0.001
+        self.deco_weight = deco_weight
 
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
