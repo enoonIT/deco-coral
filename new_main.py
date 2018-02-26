@@ -139,7 +139,7 @@ if __name__ == '__main__':
     LEARNING_RATE = args.lr
     BATCH_SIZE = [args.batch_size, args.batch_size]
     EPOCHS = args.epochs
-    STEP_DOWN = int(EPOCHS / 0.4)
+    STEP_DOWN = int(EPOCHS * 0.4)
     GAMMA = 0.2
 
     source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
