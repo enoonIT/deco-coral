@@ -46,7 +46,7 @@ def train(model, optimizer, epoch, _lambda):
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
         coral_loss = old_models.CORAL(out1, out2)
 
-        sum_loss = _lambda * coral_loss + classification_loss + 1e-5 * deco_norm
+        sum_loss = _lambda * coral_loss + classification_loss + 1e-3 * deco_norm
         sum_loss.backward()
 
         optimizer.step()
@@ -63,7 +63,7 @@ def train(model, optimizer, epoch, _lambda):
 
         if batch_idx % 3 == 0:
             print('Train Epoch: {:2d} [{:2d}/{:2d}]\t'
-                  'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}. '\
+                  'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}. ' \
                   'Image norm:{:.4f}, Deco norm {:.4f}'.format(
                 epoch,
                 batch_idx + 1,
@@ -72,7 +72,7 @@ def train(model, optimizer, epoch, _lambda):
                 classification_loss.data[0],
                 coral_loss.data[0],
                 sum_loss.data[0],
-                source_data.norm().data[0] + target_data.norm().data[0],
+                source_data.norm().data[0] / source_data.shape[0] + target_data.norm().data[0] / target_data.shape[0],
                 deco_norm.data[0]
             ))
 

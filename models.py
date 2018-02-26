@@ -86,7 +86,7 @@ class Deco(nn.Module):
         x = self.conv3D(x)
         #        x = self.layer2(x)
         x = self.deco_weight * nn.functional.upsample(x, scale_factor=4, mode='bilinear')
-        return original + x, x.norm()
+        return original + x, x.norm() / original.shape[0]
 
 
 class AlexNet(nn.Module):
