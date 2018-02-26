@@ -20,7 +20,7 @@ WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
 
 
-def train(model, optimizer, epoch, _lambda):
+def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3):
     model.train()
 
     result = []
@@ -46,7 +46,7 @@ def train(model, optimizer, epoch, _lambda):
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
         coral_loss = old_models.CORAL(out1, out2)
 
-        sum_loss = _lambda * coral_loss + classification_loss + 1e-3 * deco_norm
+        sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm
         sum_loss.backward()
 
         optimizer.step()
@@ -136,6 +136,7 @@ def get_args():
     parser.add_argument('--epochs', default=30, type=int)
     parser.add_argument('--lambda_val', default=0.6, type=float)
     parser.add_argument('--deco_weight', default=0.001, type=float)
+    parser.add_argument('--deco_lambda', default=1e-3, type=float)
     return parser.parse_args()
 
 
@@ -190,7 +191,7 @@ if __name__ == '__main__':
         else:
             _lambda = (e + 1) / EPOCHS
 
-        res = train(model, optimizer, e + 1, _lambda)
+        res = train(model, optimizer, e + 1, _lambda, args.deco_lambda)
         print('###EPOCH {}: Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}'.format(
             e + 1,
             sum(row['classification_loss'] / row['total_steps'] for row in res),
