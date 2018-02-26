@@ -88,7 +88,7 @@ def test(model, dataset_loader, e, mode='source'):
             data, target = data.cuda(), target.cuda()
 
         data, target = Variable(data, volatile=True), Variable(target)
-        out1, out2 = model(data, data)
+        out1, out2, _ = model(data, data)
 
         out = out1 if mode == 'source' else out2
 
