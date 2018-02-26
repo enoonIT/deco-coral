@@ -135,7 +135,7 @@ def get_args():
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--epochs', default=30, type=int)
     parser.add_argument('--lambda_val', default=0.6, type=float)
-    parser.add_argument('--deco_norm_weight', default=0.001, type=float)
+    parser.add_argument('--deco_weight', default=0.001, type=float)
     return parser.parse_args()
 
 
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
     target_loader = get_office31_dataloader(case='webcam', batch_size=BATCH_SIZE[1])
 
-    model = models.DeepColorizationCORAL(31, args.deco_norm_weight)
+    model = models.DeepColorizationCORAL(31, args.deco_weight)
     lambda_val = args.lambda_val
     extra = args.extra
     if lambda_val is not None:
