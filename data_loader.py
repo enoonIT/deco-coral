@@ -75,7 +75,7 @@ def get_office31_dataloader(case, batch_size):
         'imagenet': [0.229, 0.224, 0.225],
     }
 
-    img_size = (227, 227)
+    img_size = (228, 228)
     transform = [
         transforms.Resize((256,256)),
         transforms.RandomCrop(img_size),
