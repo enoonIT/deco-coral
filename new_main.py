@@ -130,7 +130,7 @@ def get_args():
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--epochs', default=30, type=int)
     parser.add_argument('--lambda_val', default=0.6, type=float)
-    args = parser.parse_args()
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
