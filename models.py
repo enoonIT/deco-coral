@@ -2,7 +2,7 @@ import torch.nn as nn
 import math
 from torchvision.models.resnet import BasicBlock, Bottleneck
 import torch.utils.model_zoo as model_zoo
-
+from itertools import chain
 
 # code adapted from https://github.com/SSARCandy/DeepCORAL
 
@@ -10,7 +10,7 @@ import torch.utils.model_zoo as model_zoo
 class DeepColorizationCORAL(nn.Module):
     def __init__(self, num_classes=1000):
         super(DeepColorizationCORAL, self).__init__()
-        self.sharedNet = nn.Sequential(Deco(Bottleneck, [4, 4]),
+        self.sharedNet = nn.Sequential(Deco(Bottleneck, [8]),
                                        AlexNet())
         load_pretrained(self.sharedNet[1])  # load alexnet weights
         self.source_fc = nn.Linear(4096, num_classes)
@@ -39,7 +39,8 @@ class Deco(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+#        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.conv3D = nn.Conv2d(256,3,1)
         # self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         # self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
@@ -75,9 +76,10 @@ class Deco(nn.Module):
         x = self.maxpool(x)
 
         x = self.layer1(x)
-        x = self.layer2(x)
+        x = self.conv3D(x)
+#        x = self.layer2(x)
 
-        return x
+        return nn.functional.upsample(x, scale_factor=4, mode='bilinear')
 
 
 class AlexNet(nn.Module):
@@ -107,6 +109,8 @@ class AlexNet(nn.Module):
             nn.ReLU(inplace=True),
             # nn.Linear(4096, num_classes),
         )
+        for param in chain(self.features.parameters(), self.classifier.parameters()):
+            param.requires_grad = False
 
     def forward(self, x):
         x = self.features(x)

@@ -10,6 +10,7 @@ from torch.utils import model_zoo
 from torch.autograd import Variable
 
 import old_models
+import models
 import utils
 from data_loader import get_train_test_loader, get_office31_dataloader
 from logger import Logger
@@ -17,9 +18,9 @@ from logger import Logger
 CUDA = True if torch.cuda.is_available() else False
 WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
-BATCH_SIZE = [128, 128]
-EPOCHS = 90
-STEP_DOWN = 22
+BATCH_SIZE = [32, 32]
+EPOCHS = 30
+STEP_DOWN = 40
 GAMMA = 0.1
 
 source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
@@ -132,14 +133,14 @@ if __name__ == '__main__':
     parser.add_argument('--load', help='Resume from checkpoint file')
     parser.add_argument('--log_subdir', default="")
     parser.add_argument('--lr',type=float, default=0.001)
-    parser.add_argument('--extra', help="appended to log name")
+    parser.add_argument('--extra', help="appended to log name", default="")
     args = parser.parse_args()
 
     LEARNING_RATE = args.lr
-    model = old_models.DeepCORAL(31)
-    lambda_val = 0.8
+    model = models.DeepColorizationCORAL(31)
+    lambda_val = 0.6
     extra = args.extra
-    if lambda_val:
+    if lambda_val is not None:
         extra += "lambda_%g" % lambda_val
     else:
         extra += "growing_lambda"
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
     optimizer = torch.optim.SGD([
-        {'params': model.sharedNet.parameters()},
+        {'params': filter(lambda p: p.requires_grad, model.sharedNet.parameters())},
         {'params': model.source_fc.parameters(), 'lr': 10 * LEARNING_RATE},
         {'params': model.target_fc.parameters(), 'lr': 10 * LEARNING_RATE}
     ], lr=LEARNING_RATE, momentum=MOMENTUM)
@@ -168,7 +169,7 @@ if __name__ == '__main__':
     for e in range(0, EPOCHS):
         scheduler.step()
         print(scheduler.get_lr())
-        if lambda_val:
+        if lambda_val is not None:
             _lambda = lambda_val
         else:
             _lambda = (e + 1) / EPOCHS
