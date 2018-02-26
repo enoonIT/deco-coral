@@ -19,10 +19,6 @@ CUDA = True if torch.cuda.is_available() else False
 WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
 
-source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
-target_loader = get_office31_dataloader(case='webcam', batch_size=BATCH_SIZE[1])
-
-
 def train(model, optimizer, epoch, _lambda):
     model.train()
 
@@ -145,6 +141,9 @@ if __name__ == '__main__':
     EPOCHS = args.epochs
     STEP_DOWN = int(EPOCHS / 0.4)
     GAMMA = 0.2
+
+    source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
+    target_loader = get_office31_dataloader(case='webcam', batch_size=BATCH_SIZE[1])
 
     model = models.DeepColorizationCORAL(31)
     lambda_val = args.lambda_val
