@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     if CUDA:
         model = model.cuda()
-
+        torch.backends.cudnn.benchmark = True
     if args.load is not None:
         utils.load_net(model, args.load)
     else:
