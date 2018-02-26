@@ -18,10 +18,6 @@ from logger import Logger
 CUDA = True if torch.cuda.is_available() else False
 WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
-BATCH_SIZE = [32, 32]
-EPOCHS = 30
-STEP_DOWN = 40
-GAMMA = 0.1
 
 source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
 target_loader = get_office31_dataloader(case='webcam', batch_size=BATCH_SIZE[1])
@@ -128,29 +124,43 @@ def load_pretrained(model):
     model.load_state_dict(model_dict)
 
 
-if __name__ == '__main__':
+
+def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--load', help='Resume from checkpoint file')
     parser.add_argument('--log_subdir', default="")
-    parser.add_argument('--lr',type=float, default=0.001)
+    parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--extra', help="appended to log name", default="")
+    parser.add_argument('--batch_size', default=64, type=int)
+    parser.add_argument('--epochs', default=30, type=int)
+    parser.add_argument('--lambda_val', default=0.6, type=float)
     args = parser.parse_args()
 
+if __name__ == '__main__':
+    args = get_args()
+
     LEARNING_RATE = args.lr
+    BATCH_SIZE = [args.batch_size, args.batch_size]
+    EPOCHS = args.epochs
+    STEP_DOWN = int(EPOCHS / 0.4)
+    GAMMA = 0.2
+
+
     model = models.DeepColorizationCORAL(31)
-    lambda_val = 0.6
+    lambda_val = args.lambda_val
     extra = args.extra
     if lambda_val is not None:
         extra += "lambda_%g" % lambda_val
     else:
         extra += "growing_lambda"
-    logger = Logger("logs/%sbs%d_lr%g_e%d_%s_%d" % (args.log_subdir, BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100))
+    logger = Logger("logs/%sbs%d_lr%g_e%d_%s_%d" % (
+    args.log_subdir, BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100))
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
     optimizer = torch.optim.SGD([
         {'params': filter(lambda p: p.requires_grad, model.sharedNet.parameters())},
-        {'params': model.source_fc.parameters(), 'lr': 10 * LEARNING_RATE},
-        {'params': model.target_fc.parameters(), 'lr': 10 * LEARNING_RATE}
+        {'params': model.source_fc.parameters(), 'lr': LEARNING_RATE},
+        {'params': model.target_fc.parameters(), 'lr': LEARNING_RATE}
     ], lr=LEARNING_RATE, momentum=MOMENTUM)
     scheduler = StepLR(optimizer, step_size=STEP_DOWN, gamma=GAMMA)
 
@@ -166,6 +176,7 @@ if __name__ == '__main__':
     testing_s_statistic = []
     testing_t_statistic = []
     print(scheduler.get_lr())
+    start = time.time()
     for e in range(0, EPOCHS):
         scheduler.step()
         print(scheduler.get_lr())
@@ -209,7 +220,7 @@ if __name__ == '__main__':
         logger.scalar_summary("acc/source", test_source['accuracy'], e + 1)
         logger.scalar_summary("lr", scheduler.get_lr()[0], e + 1)
         logger.scalar_summary("lambda", _lambda, e + 1)
-
+    print("It took %g seconds" % (time.time() - start))
     utils.save(training_statistic, 'training_statistic.pkl')
     utils.save(testing_s_statistic, 'testing_s_statistic.pkl')
     utils.save(testing_t_statistic, 'testing_t_statistic.pkl')
