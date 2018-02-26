@@ -63,7 +63,8 @@ def train(model, optimizer, epoch, _lambda):
 
         if batch_idx % 3 == 0:
             print('Train Epoch: {:2d} [{:2d}/{:2d}]\t'
-                  'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}. Deco norm {:.4f}'.format(
+                  'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}. '\
+                  'Image norm:{:.4f}, Deco norm {:.4f}'.format(
                 epoch,
                 batch_idx + 1,
                 train_steps,
@@ -71,6 +72,7 @@ def train(model, optimizer, epoch, _lambda):
                 classification_loss.data[0],
                 coral_loss.data[0],
                 sum_loss.data[0],
+                source_data.norm().data[0],
                 deco_norm.data[0]
             ))
 
