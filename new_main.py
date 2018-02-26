@@ -58,7 +58,8 @@ def train(model, optimizer, epoch, _lambda):
             'lambda': _lambda,
             'coral_loss': coral_loss.data[0],
             'classification_loss': classification_loss.data[0],
-            'total_loss': sum_loss.data[0]
+            'total_loss': sum_loss.data[0],
+            'deco_norm': deco_norm
         })
 
         if batch_idx % 3 == 0:
@@ -219,10 +220,11 @@ if __name__ == '__main__':
         ))
         logger.scalar_summary("loss/coral", sum(row['coral_loss'] / row['total_steps'] for row in res), e + 1)
         logger.scalar_summary("loss/source", sum(row['classification_loss'] / row['total_steps'] for row in res), e + 1)
+        logger.scalar_summary("loss/deco_norm", sum(row['deco_norm'] / row['total_steps'] for row in res), e + 1)
         logger.scalar_summary("acc/target", test_target['accuracy'], e + 1)
         logger.scalar_summary("acc/source", test_source['accuracy'], e + 1)
         logger.scalar_summary("lr", scheduler.get_lr()[0], e + 1)
-        logger.scalar_summary("lambda", _lambda, e + 1)
+        logger.scalar_summary("weights/lambda", _lambda, e + 1)
     print("It took %g seconds" % (time.time() - start))
     utils.save(training_statistic, 'training_statistic.pkl')
     utils.save(testing_s_statistic, 'testing_s_statistic.pkl')
