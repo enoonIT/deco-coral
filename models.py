@@ -57,6 +57,7 @@ class Deco(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
+        self.deco_weight = 0.001
 
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
@@ -84,7 +85,7 @@ class Deco(nn.Module):
         x = self.layer1(x)
         x = self.conv3D(x)
         #        x = self.layer2(x)
-        x = nn.functional.upsample(x, scale_factor=4, mode='bilinear')
+        x = self.deco_weight * nn.functional.upsample(x, scale_factor=4, mode='bilinear')
         return original + x, x.norm()
 
 
