@@ -15,9 +15,8 @@ def get_new_image(input, model):
 class DeepColorizationCORAL(nn.Module):
     def __init__(self, num_classes=1000):
         super(DeepColorizationCORAL, self).__init__()
-        self.sharedNet = nn.Sequential(Deco(Bottleneck, [8]),
-                                       AlexNet())
-        load_pretrained(self.sharedNet[1])  # load alexnet weights
+        self.deco = Deco(Bottleneck, [8])
+        self.sharedNet = AlexNet()
         self.source_fc = nn.Linear(4096, num_classes)
         self.target_fc = nn.Linear(4096, num_classes)
 
@@ -26,12 +25,14 @@ class DeepColorizationCORAL(nn.Module):
         self.target_fc.weight.data.normal_(0, 0.005)
 
     def forward(self, source, target):
+        source, source_res_norm = self.deco(source)
         source = self.sharedNet(source)
         source = self.source_fc(source)
 
+        target, target_res_norm = self.deco(target)
         target = self.sharedNet(target)
         target = self.source_fc(target)
-        return source, target
+        return source, target, source_res_norm + target_res_norm
 
 
 class Deco(nn.Module):
@@ -83,8 +84,8 @@ class Deco(nn.Module):
         x = self.layer1(x)
         x = self.conv3D(x)
         #        x = self.layer2(x)
-
-        return original + nn.functional.upsample(x, scale_factor=4, mode='bilinear')
+        x = nn.functional.upsample(x, scale_factor=4, mode='bilinear')
+        return original + x, x.norm()
 
 
 class AlexNet(nn.Module):

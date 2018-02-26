@@ -41,7 +41,7 @@ def train(model, optimizer, epoch, _lambda):
         target_data = Variable(target_data)
 
         optimizer.zero_grad()
-        out1, out2 = model(source_data, target_data)
+        out1, out2, deco_norm = model(source_data, target_data)
 
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
         coral_loss = old_models.CORAL(out1, out2)
@@ -63,14 +63,15 @@ def train(model, optimizer, epoch, _lambda):
 
         if batch_idx % 3 == 0:
             print('Train Epoch: {:2d} [{:2d}/{:2d}]\t'
-                  'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}'.format(
+                  'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}. Deco norm {:.4f}'.format(
                 epoch,
                 batch_idx + 1,
                 train_steps,
                 _lambda,
                 classification_loss.data[0],
                 coral_loss.data[0],
-                sum_loss.data[0]
+                sum_loss.data[0],
+                deco_norm.data
             ))
 
     return result
@@ -158,7 +159,7 @@ if __name__ == '__main__':
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
     optimizer = torch.optim.SGD([
-        {'params': filter(lambda p: p.requires_grad, model.sharedNet.parameters())},
+        {'params': model.deco.parameters(), 'lr': LEARNING_RATE},
         {'params': model.source_fc.parameters(), 'lr': LEARNING_RATE},
         {'params': model.target_fc.parameters(), 'lr': LEARNING_RATE}
     ], lr=LEARNING_RATE, momentum=MOMENTUM)
