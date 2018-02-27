@@ -43,10 +43,13 @@ def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3):
         optimizer.zero_grad()
         out1, out2, deco_norm = model(source_data, target_data)
 
+        fc7coral = model.get_fc7_coral()
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
+        #TODO: apply coral loss at fc7
+        #TODO: separate DECO for source and target?
         coral_loss = old_models.CORAL(out1, out2)
 
-        sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm
+        sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm + 0.2 * fc7coral
         sum_loss.backward()
 
         optimizer.step()
@@ -59,13 +62,14 @@ def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3):
             'coral_loss': coral_loss.data[0],
             'classification_loss': classification_loss.data[0],
             'total_loss': sum_loss.data[0],
-            'deco_norm': deco_norm
+            'deco_norm': deco_norm,
+            'fc7coral_loss': fc7coral.data[0]
         })
 
         if batch_idx % 3 == 0:
             print('Train Epoch: {:2d} [{:2d}/{:2d}]\t'
                   'Lambda: {:.4f}, Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}. ' \
-                  'Image norm:{:.4f}, Deco norm {:.4f}'.format(
+                  'Image norm:{:.4f}, Deco norm {:.5f}. FC7 coral: {:.4f}'.format(
                 epoch,
                 batch_idx + 1,
                 train_steps,
@@ -74,7 +78,8 @@ def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3):
                 coral_loss.data[0],
                 sum_loss.data[0],
                 source_data.norm().data[0] / source_data.shape[0] + target_data.norm().data[0] / target_data.shape[0],
-                deco_norm.data[0]
+                deco_norm.data[0],
+                fc7coral.data[0]
             ))
 
     return result
@@ -221,6 +226,7 @@ if __name__ == '__main__':
             test_target['accuracy'],
         ))
         logger.scalar_summary("loss/coral", sum(row['coral_loss'] / row['total_steps'] for row in res), e + 1)
+        logger.scalar_summary("loss/fc7_coral", sum(row['fc7coral_loss'] / row['total_steps'] for row in res), e + 1)
         logger.scalar_summary("loss/source", sum(row['classification_loss'] / row['total_steps'] for row in res), e + 1)
         logger.scalar_summary("loss/deco_norm", sum(row['deco_norm'] / row['total_steps'] for row in res), e + 1)
         logger.scalar_summary("acc/target", test_target['accuracy'], e + 1)

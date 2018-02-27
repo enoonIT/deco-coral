@@ -6,6 +6,7 @@ from itertools import chain
 
 
 # code adapted from https://github.com/SSARCandy/DeepCORAL
+import old_models
 
 
 def get_new_image(input, model):
@@ -23,16 +24,22 @@ class DeepColorizationCORAL(nn.Module):
         # initialize according to CORAL paper experiment
         self.source_fc.weight.data.normal_(0, 0.005)
         self.target_fc.weight.data.normal_(0, 0.005)
+        self.fc7coral = None
 
     def forward(self, source, target):
         source, source_res_norm = self.deco(source)
         source = self.sharedNet(source)
-        source = self.source_fc(source)
 
         target, target_res_norm = self.deco(target)
         target = self.sharedNet(target)
+
+        self.fc7coral = old_models.CORAL(source, target)
+        source = self.source_fc(source)
         target = self.source_fc(target)
         return source, target, source_res_norm + target_res_norm
+
+    def get_fc7_coral(self):
+        return self.fc7coral
 
 
 class Deco(nn.Module):
