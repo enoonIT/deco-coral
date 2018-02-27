@@ -39,7 +39,7 @@ class DeepColorizationCORAL(nn.Module):
         return source, target, source_res_norm + target_res_norm
 
     def get_fc7_coral(self):
-        return self.fc7coral
+        return 1000*self.fc7coral
 
 
 class Deco(nn.Module):

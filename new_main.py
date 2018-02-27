@@ -49,7 +49,7 @@ def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3):
         #TODO: separate DECO for source and target?
         coral_loss = old_models.CORAL(out1, out2)
 
-        sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm + 0.2 * fc7coral
+        sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm + fc7coral
         sum_loss.backward()
 
         optimizer.step()
