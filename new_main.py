@@ -161,7 +161,7 @@ if __name__ == '__main__':
     target_loader = get_office31_dataloader(case=args.target, batch_size=BATCH_SIZE[1])
 
     extra = args.extra
-    extra +="_%c-%c" % (args.source, args.target)
+    extra +="_%c-%c" % (args.source[0], args.target[0])
     if args.target_only:
         print("Applying DECO only to target")
         extra += "_decoOnTarget"
