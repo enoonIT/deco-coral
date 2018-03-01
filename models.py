@@ -70,7 +70,7 @@ class DeepColorizationCORAL_sourceOnly(DeepColorizationCORAL):
 
     def forward(self, source, target):
         # source, source_res_norm = self.deco(source)
-        source, source_res_norm = self.deco(target)
+        source, source_res_norm = self.deco(source)
         source = self.sharedNet(source)
 
         target_res_norm = source_res_norm
