@@ -1,18 +1,18 @@
 from __future__ import division
-import argparse
 
+import argparse
+import itertools
 import time
 
-import itertools
 import torch
+from torch.autograd import Variable
 from torch.optim.lr_scheduler import StepLR
 from torch.utils import model_zoo
-from torch.autograd import Variable
 
-import old_models
 import models
+import old_models
 import utils
-from data_loader import get_train_test_loader, get_office31_dataloader
+from data_loader import get_office31_dataloader
 from logger import Logger
 
 CUDA = True if torch.cuda.is_available() else False
@@ -45,7 +45,7 @@ def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3, fc7_lambda=1e4):
 
         fc7coral = model.get_fc7_coral()
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
-        #TODO: separate DECO for source and target?
+        # TODO: separate DECO for source and target?
         coral_loss = old_models.CORAL(out1, out2)
 
         sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm + fc7_lambda * fc7coral
@@ -142,6 +142,7 @@ def get_args():
     parser.add_argument('--deco_lambda', default=1e-3, type=float, help="loss weight for deco image norm")
     parser.add_argument('--fc7_lambda', default=1e3, type=float)
     parser.add_argument('--target_only', action="store_true", help="If set, deco will be applyed only to the target")
+    parser.add_argument('--source_only', action="store_true", help="If set, deco will be applyed only to the source")
     return parser.parse_args()
 
 
@@ -160,8 +161,12 @@ if __name__ == '__main__':
     extra = args.extra
     if args.target_only:
         print("Applying DECO only to target")
-        extra+="_decoOnTarget"
+        extra += "_decoOnTarget"
         model = models.DeepColorizationCORAL_targetOnly(31)
+    elif args.source_only:
+        print("Applying DECO only to source")
+        extra += "_decoOnSource"
+        model = models.DeepColorizationCORAL_sourceOnly(31)
     else:
         model = models.DeepColorizationCORAL(31)
     lambda_val = args.lambda_val
@@ -170,7 +175,8 @@ if __name__ == '__main__':
         extra += "_lambda_%g" % lambda_val
     else:
         extra += "growing_lambda"
-    name = "bs%d_lr%g_e%d_fc7lw%g_deco_nweight%g_%s_%d" % (BATCH_SIZE[0], LEARNING_RATE, EPOCHS, fc7_lambda, args.deco_lambda, extra, int(time.time()) % 100)
+    name = "bs%d_lr%g_e%d_fc7lw%g_deco_nweight%g_%s_%d" % (
+    BATCH_SIZE[0], LEARNING_RATE, EPOCHS, fc7_lambda, args.deco_lambda, extra, int(time.time()) % 100)
     logger = Logger("logs/%s%s" % (args.log_subdir, name))
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
