@@ -4,7 +4,6 @@ from torchvision.models.resnet import BasicBlock, Bottleneck
 import torch.utils.model_zoo as model_zoo
 from itertools import chain
 
-
 # code adapted from https://github.com/SSARCandy/DeepCORAL
 import old_models
 
@@ -13,8 +12,10 @@ def get_new_image(input, model):
     return model.sharedNet[0](input)
 
 
+deco_weight = 0.001
+
 class DeepColorizationCORAL(nn.Module):
-    def __init__(self, num_classes=1000, deco_weight=0.001):
+    def __init__(self, num_classes=1000, deco_weight=deco_weight):
         super(DeepColorizationCORAL, self).__init__()
         self.deco = Deco(Bottleneck, [8], deco_weight)
         self.sharedNet = AlexNet()
@@ -25,6 +26,7 @@ class DeepColorizationCORAL(nn.Module):
         self.source_fc.weight.data.normal_(0, 0.005)
         self.target_fc.weight.data.normal_(0, 0.005)
         self.fc7coral = None
+        self.fc6coral = None
 
     def forward(self, source, target):
         source, source_res_norm = self.deco(source)
@@ -39,7 +41,37 @@ class DeepColorizationCORAL(nn.Module):
         return source, target, source_res_norm + target_res_norm
 
     def get_fc7_coral(self):
-        return 1000*self.fc7coral
+        return 1000 * self.fc7coral
+
+
+class DeepColorizationCORAL_targetOnly(nn.Module):
+    def __init__(self, num_classes=1000, deco_weight=deco_weight):
+        super(DeepColorizationCORAL_targetOnly, self).__init__()
+        self.deco = Deco(Bottleneck, [8], deco_weight)
+        self.sharedNet = AlexNet()
+        self.source_fc = nn.Linear(4096, num_classes)
+        self.target_fc = nn.Linear(4096, num_classes)
+
+        # initialize according to CORAL paper experiment
+        self.source_fc.weight.data.normal_(0, 0.005)
+        self.target_fc.weight.data.normal_(0, 0.005)
+        self.fc7coral = None
+
+    def forward(self, source, target):
+        # source, source_res_norm = self.deco(source)
+        source = self.sharedNet(source)
+
+        target, target_res_norm = self.deco(target)
+        target = self.sharedNet(target)
+        source_res_norm = target_res_norm
+
+        self.fc7coral = old_models.CORAL(source, target)
+        source = self.source_fc(source)
+        target = self.source_fc(target)
+        return source, target, source_res_norm + target_res_norm
+
+    def get_fc7_coral(self):
+        return 1000 * self.fc7coral
 
 
 class Deco(nn.Module):

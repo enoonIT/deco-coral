@@ -20,7 +20,7 @@ WEIGHT_DECAY = 5e-4
 MOMENTUM = 0.9
 
 
-def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3):
+def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3, fc7_lambda=1e4):
     model.train()
 
     result = []
@@ -45,11 +45,10 @@ def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3):
 
         fc7coral = model.get_fc7_coral()
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
-        #TODO: apply coral loss at fc7
         #TODO: separate DECO for source and target?
         coral_loss = old_models.CORAL(out1, out2)
 
-        sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm + fc7coral
+        sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm + fc7_lambda * fc7coral
         sum_loss.backward()
 
         optimizer.step()
@@ -136,12 +135,13 @@ def get_args():
     parser.add_argument('--load', help='Resume from checkpoint file')
     parser.add_argument('--log_subdir', default="")
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--extra', help="appended to log name", default="")
+    parser.add_argument('--extra', help="appended to log name", default="extra")
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--epochs', default=30, type=int)
     parser.add_argument('--lambda_val', default=0.6, type=float)
-    parser.add_argument('--deco_weight', default=0.001, type=float)
-    parser.add_argument('--deco_lambda', default=1e-3, type=float)
+    parser.add_argument('--deco_lambda', default=1e-3, type=float, help="loss weight for deco image norm")
+    parser.add_argument('--fc7_lambda', default=1e3, type=float)
+    parser.add_argument('--target_only', action="store_true", help="If set, deco will be applyed only to the target")
     return parser.parse_args()
 
 
@@ -157,14 +157,20 @@ if __name__ == '__main__':
     source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
     target_loader = get_office31_dataloader(case='webcam', batch_size=BATCH_SIZE[1])
 
-    model = models.DeepColorizationCORAL(31, args.deco_weight)
-    lambda_val = args.lambda_val
     extra = args.extra
+    if args.target_only:
+        print("Applying DECO only to target")
+        extra+="_decoOnTarget"
+        model = models.DeepColorizationCORAL_targetOnly(31)
+    else:
+        model = models.DeepColorizationCORAL(31)
+    lambda_val = args.lambda_val
+    fc7_lambda = args.fc7_lambda
     if lambda_val is not None:
-        extra += "lambda_%g" % lambda_val
+        extra += "_lambda_%g" % lambda_val
     else:
         extra += "growing_lambda"
-    name = "bs%d_lr%g_e%d_%s_%d" % (BATCH_SIZE[0], LEARNING_RATE, EPOCHS, extra, int(time.time()) % 100)
+    name = "bs%d_lr%g_e%d_fc7lw%g_deco_nweight%g_%s_%d" % (BATCH_SIZE[0], LEARNING_RATE, EPOCHS, fc7_lambda, args.deco_lambda, extra, int(time.time()) % 100)
     logger = Logger("logs/%s%s" % (args.log_subdir, name))
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
@@ -196,7 +202,7 @@ if __name__ == '__main__':
         else:
             _lambda = (e + 1) / EPOCHS
 
-        res = train(model, optimizer, e + 1, _lambda, args.deco_lambda)
+        res = train(model, optimizer, e + 1, _lambda, args.deco_lambda, fc7_lambda=fc7_lambda)
         print('###EPOCH {}: Class: {:.6f}, CORAL: {:.6f}, Total_Loss: {:.6f}'.format(
             e + 1,
             sum(row['classification_loss'] / row['total_steps'] for row in res),
