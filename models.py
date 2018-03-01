@@ -16,6 +16,12 @@ def get_new_image(input, model):
 deco_weight = 0.001
 
 
+class DecoReverseGrade(nn.Module):
+    def __init__(self, num_classes=1000, deco_weight=deco_weight):
+        super(DecoReverseGrade, self).__init__()
+        self.deco = Deco(Bottleneck, [8], deco_weight)
+
+
 class DeepColorizationCORAL(nn.Module):
     def __init__(self, num_classes=1000, deco_weight=deco_weight):
         super(DeepColorizationCORAL, self).__init__()
@@ -51,7 +57,6 @@ class DeepColorizationCORAL_targetOnly(DeepColorizationCORAL):
         super(DeepColorizationCORAL_targetOnly, self).__init__()
 
     def forward(self, source, target):
-        # source, source_res_norm = self.deco(source)
         source = self.sharedNet(source)
 
         target, target_res_norm = self.deco(target)
@@ -75,7 +80,6 @@ class DeepColorizationCORAL_sourceOnly(DeepColorizationCORAL):
 
         target_res_norm = source_res_norm
         target = self.sharedNet(target)
-
 
         self.fc7coral = old_models.CORAL(source, target)
         source = self.source_fc(source)

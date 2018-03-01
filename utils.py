@@ -1,7 +1,24 @@
 import pickle
+
 import torch
+from torch.autograd import Function
 from torch.utils import data
 from torchvision import datasets, transforms
+
+
+class ReverseLayerF(Function):
+
+    @staticmethod
+    def forward(ctx, x, alpha):
+        ctx.alpha = alpha
+
+        return x.view_as(x)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        output = grad_output.neg() * ctx.alpha
+
+        return output, None
 
 
 def get_dataset_mean_and_std(directory):
@@ -24,8 +41,8 @@ def get_dataset_mean_and_std(directory):
             _mean += img.mean()
             _std += img.std()
 
-        mean[channel] = _mean/len(dataset)
-        std[channel] = _std/len(dataset)
+        mean[channel] = _mean / len(dataset)
+        std[channel] = _std / len(dataset)
 
     return mean, std
 

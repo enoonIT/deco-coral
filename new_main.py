@@ -143,6 +143,8 @@ def get_args():
     parser.add_argument('--fc7_lambda', default=1e3, type=float)
     parser.add_argument('--target_only', action="store_true", help="If set, deco will be applyed only to the target")
     parser.add_argument('--source_only', action="store_true", help="If set, deco will be applyed only to the source")
+    parser.add_argument('--source', default="amazon")
+    parser.add_argument('--target', default="webcam")
     return parser.parse_args()
 
 
@@ -155,10 +157,11 @@ if __name__ == '__main__':
     STEP_DOWN = int(EPOCHS * 0.4)
     GAMMA = 0.2
 
-    source_loader = get_office31_dataloader(case='amazon', batch_size=BATCH_SIZE[0])
-    target_loader = get_office31_dataloader(case='webcam', batch_size=BATCH_SIZE[1])
+    source_loader = get_office31_dataloader(case=args.source, batch_size=BATCH_SIZE[0])
+    target_loader = get_office31_dataloader(case=args.target, batch_size=BATCH_SIZE[1])
 
     extra = args.extra
+    extra +="_%c-%c" % (args.source, args.target)
     if args.target_only:
         print("Applying DECO only to target")
         extra += "_decoOnTarget"
