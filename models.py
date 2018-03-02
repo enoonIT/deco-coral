@@ -32,6 +32,7 @@ class DeepCORAL(nn.Module):
         # initialize according to CORAL paper experiment
         self.source_fc.weight.data.normal_(0, 0.005)
         self.target_fc.weight.data.normal_(0, 0.005)
+        self.deco = self.sharedNet
 
     def forward(self, source, target):
         source = self.sharedNet(source)
