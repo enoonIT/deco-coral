@@ -22,6 +22,29 @@ class DecoReverseGrade(nn.Module):
         self.deco = Deco(Bottleneck, [8], deco_weight)
 
 
+class DeepCORAL(nn.Module):
+    def __init__(self, num_classes=1000):
+        super(DeepCORAL, self).__init__()
+        self.sharedNet = AlexNet()
+        self.source_fc = nn.Linear(4096, num_classes)
+        self.target_fc = nn.Linear(4096, num_classes)
+
+        # initialize according to CORAL paper experiment
+        self.source_fc.weight.data.normal_(0, 0.005)
+        self.target_fc.weight.data.normal_(0, 0.005)
+
+    def forward(self, source, target):
+        source = self.sharedNet(source)
+        source = self.source_fc(source)
+
+        target = self.sharedNet(target)
+        target = self.source_fc(target)
+        return source, target, 0
+
+    def get_fc7_coral(self):
+        return 0
+
+
 class DeepColorizationCORAL(nn.Module):
     def __init__(self, num_classes=1000, deco_weight=deco_weight):
         super(DeepColorizationCORAL, self).__init__()

@@ -162,7 +162,7 @@ if __name__ == '__main__':
     target_loader = get_office31_dataloader(case=args.target, batch_size=BATCH_SIZE[1])
 
     extra = args.extra
-    extra +="_%c-%c" % (args.source[0], args.target[0])
+    extra += "_%c-%c" % (args.source[0], args.target[0])
     if args.target_only:
         print("Applying DECO only to target")
         extra += "_decoOnTarget"
@@ -173,7 +173,7 @@ if __name__ == '__main__':
         model = models.DeepColorizationCORAL_sourceOnly(31)
     elif args.old_coral:
         extra += "_oldCoral"
-        model = old_models.DeepCORAL(31)
+        model = models.DeepCORAL(31)
     else:
         model = models.DeepColorizationCORAL(31)
     lambda_val = args.lambda_val
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     else:
         extra += "growing_lambda"
     name = "bs%d_lr%g_e%d_fc7lw%g_deco_nweight%g_%s_%d" % (
-    BATCH_SIZE[0], LEARNING_RATE, EPOCHS, fc7_lambda, args.deco_lambda, extra, int(time.time()) % 100)
+        BATCH_SIZE[0], LEARNING_RATE, EPOCHS, fc7_lambda, args.deco_lambda, extra, int(time.time()) % 100)
     logger = Logger("logs/%s%s" % (args.log_subdir, name))
     # support different learning rate according to CORAL paper
     # i.e. 10 times learning rate for the last two fc layers.
