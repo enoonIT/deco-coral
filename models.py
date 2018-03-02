@@ -33,6 +33,8 @@ class DeepCORAL(nn.Module):
         self.source_fc.weight.data.normal_(0, 0.005)
         self.target_fc.weight.data.normal_(0, 0.005)
         self.deco = self.sharedNet
+        for param in self.sharedNet.parameters():
+            param.requires_grad = True
 
     def forward(self, source, target):
         source = self.sharedNet(source)
