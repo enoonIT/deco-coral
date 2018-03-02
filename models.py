@@ -1,8 +1,10 @@
 import math
 from itertools import chain
 
+import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
+from torch.autograd import Variable
 from torchvision.models.resnet import Bottleneck
 
 # code adapted from https://github.com/SSARCandy/DeepCORAL
@@ -42,10 +44,10 @@ class DeepCORAL(nn.Module):
 
         target = self.sharedNet(target)
         target = self.source_fc(target)
-        return source, target, 0
+        return source, target, Variable(torch.zeros(1))
 
     def get_fc7_coral(self):
-        return 0
+        return Variable(torch.zeros(1))
 
 
 class DeepColorizationCORAL(nn.Module):
