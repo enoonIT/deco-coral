@@ -45,7 +45,7 @@ def train(model, optimizer, epoch, _lambda, deco_lambda=1e-3, fc7_lambda=1e4):
 
         fc7coral = model.get_fc7_coral()
         classification_loss = torch.nn.functional.cross_entropy(out1, source_label)
-        # TODO: separate DECO for source and target?
+
         coral_loss = old_models.CORAL(out1, out2)
 
         sum_loss = _lambda * coral_loss + classification_loss + deco_lambda * deco_norm + fc7_lambda * fc7coral
@@ -143,6 +143,7 @@ def get_args():
     parser.add_argument('--fc7_lambda', default=1e3, type=float)
     parser.add_argument('--target_only', action="store_true", help="If set, deco will be applyed only to the target")
     parser.add_argument('--source_only', action="store_true", help="If set, deco will be applyed only to the source")
+    parser.add_argument('--old_coral', action="store_true")
     parser.add_argument('--source', default="amazon")
     parser.add_argument('--target', default="webcam")
     return parser.parse_args()
@@ -170,6 +171,9 @@ if __name__ == '__main__':
         print("Applying DECO only to source")
         extra += "_decoOnSource"
         model = models.DeepColorizationCORAL_sourceOnly(31)
+    elif args.old_coral:
+        extra += "_oldCoral"
+        model = old_models.DeepCORAL(31)
     else:
         model = models.DeepColorizationCORAL(31)
     lambda_val = args.lambda_val
