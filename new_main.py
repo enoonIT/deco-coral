@@ -131,7 +131,7 @@ def load_pretrained(model):
 
 
 def get_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--load', help='Resume from checkpoint file')
     parser.add_argument('--log_subdir', default="")
     parser.add_argument('--lr', type=float, default=0.001)
