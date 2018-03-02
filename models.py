@@ -40,14 +40,15 @@ class DeepCORAL(nn.Module):
 
     def forward(self, source, target):
         source = self.sharedNet(source)
-        source = self.source_fc(source)
-
         target = self.sharedNet(target)
+        self.fc7coral = old_models.CORAL(source, target)
+
+        source = self.source_fc(source)
         target = self.source_fc(target)
         return source, target, Variable(torch.zeros(1)).cuda()
 
     def get_fc7_coral(self):
-        return Variable(torch.zeros(1)).cuda()
+        return self.fc7coral
 
 
 class DeepColorizationCORAL(nn.Module):
